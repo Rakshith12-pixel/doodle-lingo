@@ -383,6 +383,16 @@
         if (angle > Math.PI) angle = Math.PI * 2 - angle;
         if (angle > .72) turns += 1;
       }
+      if (closed && compact.length > 3) {
+        const before = compact[compact.length - 2];
+        const at = compact[0];
+        const after = compact[1];
+        const angleA = Math.atan2(at.y - before.y, at.x - before.x);
+        const angleB = Math.atan2(after.y - at.y, after.x - at.x);
+        let angle = Math.abs(angleB - angleA);
+        if (angle > Math.PI) angle = Math.PI * 2 - angle;
+        if (angle > .72) turns += 1;
+      }
       let pathMinX = Infinity;
       let pathMaxX = -Infinity;
       let pathMinY = Infinity;
@@ -434,10 +444,6 @@
     const wheels = compactLoops.filter((shape) => shape.width > .06 && shape.height > .06 && shape.width / shape.height > .55 && shape.width / shape.height < 1.7);
     const body = shapes.some((shape) => shape.closed && shape.width > .48 && shape.width > shape.height * 1.35 && shape.turns >= 3);
     if (wheels.length >= 2 && body) return 'vehicle';
-
-    const head = compactLoops.some((shape) => shape.width > .13 && shape.width < .62 && shape.height > .13 && shape.height < .62 && shape.path.every((point) => point.y < .48));
-    const bodyLine = shapes.some((shape) => shape.height > .38 && shape.width < .28);
-    if (head && bodyLine && shapes.length >= 3) return 'friend';
 
     // Ambiguous art is deliberately left unnamed; the child can choose a picture
     // in the story picker, avoiding a confident but unrelated story.
