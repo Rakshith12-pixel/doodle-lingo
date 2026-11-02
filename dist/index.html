@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4f1ff" />
+    <meta name="description" content="A cozy little place for doodles, stories, and new ideas." />
+    <title>Doodle Garden — every doodle has a story</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#home" aria-label="Doodle Garden home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 48 48" fill="none">
+              <path d="M24 4.7c2.6 0 4.2 5.2 6.5 6.2 2.5 1 7.2-1.8 9.1.1 1.9 1.9-.9 6.6.1 9.1 1 2.3 6.2 3.9 6.2 6.5s-5.2 4.2-6.2 6.5c-1 2.5 1.8 7.2-.1 9.1-1.9 1.9-6.6-.9-9.1.1C28.2 43.3 26.6 48.5 24 48.5s-4.2-5.2-6.5-6.2c-2.5-1-7.2 1.8-9.1-.1-1.9-1.9.9-6.6-.1-9.1C7.3 30.8 2.1 29.2 2.1 26.6s5.2-4.2 6.2-6.5c1-2.5-1.8-7.2.1-9.1 1.9-1.9 6.6.9 9.1-.1C19.8 9.9 21.4 4.7 24 4.7Z" fill="#FFB84D"/>
+              <circle cx="24" cy="26" r="11.2" fill="#FFF8E9"/>
+              <path d="M17.7 28.3c2.8-5.6 7.2 3.8 12.5-2.9" stroke="#F17855" stroke-width="2.7" stroke-linecap="round"/>
+              <circle cx="18" cy="20.3" r="1.25" fill="#415F59"/><circle cx="30.7" cy="20.3" r="1.25" fill="#415F59"/>
+            </svg>
+          </span>
+          <span class="brand-name">doodle<span>garden</span></span>
+        </a>
+
+        <div class="topbar-right">
+          <div class="journey" aria-label="Your creative journey: draw, wonder, grow">
+            <span class="journey-step current"><span class="step-dot">1</span> draw</span>
+            <span class="journey-line" aria-hidden="true"></span>
+            <span class="journey-step"><span class="step-dot">2</span> wonder</span>
+            <span class="journey-line" aria-hidden="true"></span>
+            <span class="journey-step"><span class="step-dot">3</span> grow</span>
+          </div>
+          <span class="quiet-badge"><span class="quiet-dot"></span> a little playtime</span>
+        </div>
+      </header>
+
+      <main id="home">
+        <section class="intro-row" aria-labelledby="page-title">
+          <div>
+            <p class="eyebrow"><span class="eyebrow-sparkle">✳</span> HELLO, LITTLE ARTIST</p>
+            <h1 id="page-title">What will your doodle <span>become?</span></h1>
+            <p class="intro-copy">Every wiggly line has a little bit of wonder in it.</p>
+          </div>
+          <button class="read-button" id="read-prompt" type="button" aria-label="Read the drawing invitation aloud">
+            <span class="read-icon" aria-hidden="true">♫</span><span>Read to me</span>
+          </button>
+        </section>
+
+        <div class="workspace-grid">
+          <section class="studio-card" aria-label="Drawing studio">
+            <div class="studio-topline">
+              <div class="studio-label"><span class="sun-mini" aria-hidden="true">✳</span> YOUR ART GARDEN</div>
+              <div class="studio-hint"><span class="touch-icon" aria-hidden="true">☝</span> Touch the paper and make a mark</div>
+            </div>
+
+            <div class="paper" id="paper">
+              <div class="paper-decoration deco-sparkle" aria-hidden="true">✳</div>
+              <div class="paper-decoration deco-flower" aria-hidden="true">✿</div>
+              <div class="canvas-empty" id="canvas-empty">
+                <span class="empty-sun" aria-hidden="true">☼</span>
+                <span class="empty-title">Your paper is ready!</span>
+                <span class="empty-copy">A dot, a line, a great big squiggle — you choose.</span>
+              </div>
+              <canvas id="drawing-canvas" aria-label="Blank drawing paper. Draw here with your finger or Apple Pencil." role="img"></canvas>
+              <div class="idea-overlay" id="idea-overlay" aria-hidden="true"></div>
+              <div class="idea-caption" id="idea-caption" aria-live="polite"></div>
+            </div>
+
+            <div class="tool-row">
+              <div class="tool-actions">
+                <button class="icon-action" id="undo-button" type="button" aria-label="Undo last mark" title="Undo last mark">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7 5 11l4 4M5 11h8a6 6 0 1 1 0 12" transform="translate(0 -5)"/></svg>
+                </button>
+                <button class="icon-action" id="eraser-button" type="button" aria-label="Use eraser" aria-pressed="false" title="Eraser">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 4.5 11 11-6.2 6.2a2 2 0 0 1-2.8 0l-6.4-6.4a2 2 0 0 1 0-2.8l4.4-4.4ZM3.5 21.5h17"/></svg>
+                </button>
+                <button class="icon-action clear-action" id="clear-button" type="button" aria-label="Start a fresh page" title="Fresh page">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14m-12 0 .8 13h8.4L17 7M9 7V4h6v3m-4 4v5m3-5v5"/></svg>
+                </button>
+              </div>
+
+              <div class="palette" role="group" aria-label="Choose a crayon color">
+                <button class="color-swatch selected" type="button" data-color="#f47758" aria-label="Coral crayon" aria-pressed="true" style="--swatch:#f47758"></button>
+                <button class="color-swatch" type="button" data-color="#f5b83d" aria-label="Sunshine yellow crayon" aria-pressed="false" style="--swatch:#f5b83d"></button>
+                <button class="color-swatch" type="button" data-color="#4fae91" aria-label="Leaf green crayon" aria-pressed="false" style="--swatch:#4fae91"></button>
+                <button class="color-swatch" type="button" data-color="#5c8ce2" aria-label="Sky blue crayon" aria-pressed="false" style="--swatch:#5c8ce2"></button>
+                <button class="color-swatch" type="button" data-color="#a878d0" aria-label="Grape purple crayon" aria-pressed="false" style="--swatch:#a878d0"></button>
+                <button class="color-swatch" type="button" data-color="#344c4a" aria-label="Forest green crayon" aria-pressed="false" style="--swatch:#344c4a"></button>
+              </div>
+
+              <button class="save-button" id="save-button" type="button" aria-label="Save your drawing as a picture">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 20h14"/></svg>
+                <span>Save art</span>
+              </button>
+            </div>
+            <div class="studio-footnote"><span aria-hidden="true">♡</span> Your drawing stays on this page unless you save a picture.</div>
+          </section>
+
+          <aside class="wonder-panel" aria-label="Things to do with your doodle">
+            <div class="side-heading">
+              <span class="side-heading-flower" aria-hidden="true">✿</span>
+              <div><p class="side-kicker">WHEN YOU'RE READY</p><h2>Let's wonder...</h2></div>
+            </div>
+
+            <article class="wonder-card story-card">
+              <div class="card-art story-art" aria-hidden="true">
+                <svg viewBox="0 0 120 105" fill="none">
+                  <path d="M14 79c13-12 21-12 33 0s21 12 33 0 20-12 29-2" stroke="#6A9B84" stroke-width="5" stroke-linecap="round"/>
+                  <circle cx="57" cy="46" r="22" fill="#FFDC83"/><path d="m50 46 6 6 11-13" stroke="#8B7045" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="m22 32 3 7m-3-7-7 3m7-3 1-8M94 24l2 7m-2-7-7 2m7-2 1-7" stroke="#D790A8" stroke-width="2.5" stroke-linecap="round"/>
+                  <path d="M36 69c-8 3-10 10-8 15 7 1 12-3 13-10m39-6c9 3 12 10 10 16-7 1-12-3-13-10" fill="#B4D8A6" stroke="#5A8D78" stroke-width="2"/>
+                  <circle cx="103" cy="48" r="4" fill="#F48D6A"/><circle cx="17" cy="58" r="3" fill="#8A77C7"/>
+                </svg>
+              </div>
+              <div class="card-copy">
+                <div class="card-label story-label"><span>✦</span> STORY TIME</div>
+                <h3>Your doodle has a tale</h3>
+                <p>You decide what it is. Let's dream up a story together.</p>
+                <button class="primary-button" id="story-button" type="button"><span>Make a story</span><span class="button-arrow" aria-hidden="true">→</span></button>
+              </div>
+            </article>
+
+            <article class="wonder-card idea-card">
+              <div class="card-art idea-art" aria-hidden="true">
+                <svg viewBox="0 0 120 105" fill="none">
+                  <path d="M17 77c15-8 23-8 36 0s22 8 36 0 19-7 26-3" stroke="#78A6BD" stroke-width="4" stroke-linecap="round"/>
+                  <path d="M43 66c-2-15 7-27 18-27s20 12 18 27c-1 8-7 12-18 12s-17-4-18-12Z" fill="#FFD37B" stroke="#D99D43" stroke-width="2.5"/>
+                  <path d="M49 41c-4-9 5-13 9-6 4-7 13-3 9 6" fill="#F08D73" stroke="#C96D5F" stroke-width="2"/>
+                  <circle cx="54" cy="60" r="2" fill="#5A514A"/><circle cx="68" cy="60" r="2" fill="#5A514A"/><path d="M56 67c4 4 8 4 11 0" stroke="#D77262" stroke-width="2" stroke-linecap="round"/>
+                  <path d="m27 29 2 6m-2-6-6 2m6-2 1-6m61 9 2 6m-2-6-6 2m6-2 1-6" stroke="#9B8BCD" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="card-copy">
+                <div class="card-label idea-label"><span>✦</span> DRAW TOGETHER</div>
+                <h3>Need a little idea?</h3>
+                <p>A gentle hint can help your next mark grow.</p>
+                <button class="secondary-button" id="idea-button" type="button"><span>Show me an idea</span><span class="button-arrow" aria-hidden="true">↗</span></button>
+              </div>
+            </article>
+
+            <div class="grownup-note"><span class="grownup-icon" aria-hidden="true">☼</span><span>Grown-ups: no right or wrong pictures here. Little artists lead the way.</span></div>
+          </aside>
+        </div>
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      </main>
+    </div>
+
+    <dialog class="story-dialog" id="story-dialog" aria-labelledby="story-dialog-title">
+      <button class="dialog-close" id="dialog-close" type="button" aria-label="Close story window">×</button>
+      <div class="dialog-illustration" aria-hidden="true"><span>✷</span><span>☾</span><span>✦</span><span>✿</span></div>
+      <div class="dialog-kicker">A STORY FROM YOUR IMAGINATION</div>
+      <h2 id="story-dialog-title">What do you see in your doodle?</h2>
+      <p class="dialog-subtitle">Pick a story feeling or a tiny wonder. Your drawing can be anything you say!</p>
+      <div class="story-choices" id="story-choices">
+        <button class="story-choice" type="button" data-story="sleepy"><span class="choice-emoji">🌙</span><span><strong>Soft &amp; sleepy</strong><small>A cozy bedtime tale</small></span><span class="choice-chevron">›</span></button>
+        <button class="story-choice" type="button" data-story="friend"><span class="choice-emoji">🐾</span><span><strong>A new friend</strong><small>Someone kind to meet</small></span><span class="choice-chevron">›</span></button>
+        <button class="story-choice" type="button" data-story="adventure"><span class="choice-emoji">🚀</span><span><strong>A big adventure</strong><small>Somewhere magical to go</small></span><span class="choice-chevron">›</span></button>
+        <button class="story-choice fact-choice" type="button" data-story="fact"><span class="choice-emoji">🌱</span><span><strong>A tiny wonder</strong><small>Hear a fun fact about our world</small></span><span class="choice-chevron">›</span></button>
+      </div>
+      <div class="story-result" id="story-result" hidden>
+        <div class="story-result-heading"><span class="story-star" aria-hidden="true">✷</span><span>YOUR LITTLE STORY</span></div>
+        <p id="story-text"></p>
+        <div class="story-controls">
+          <button class="listen-story" id="listen-story" type="button"><span aria-hidden="true">♫</span> Listen</button>
+          <button class="again-story" id="again-story" type="button">Choose another</button>
+        </div>
+      </div>
+      <div class="dialog-footer"><span aria-hidden="true">♡</span> You are the storyteller.</div>
+    </dialog>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
