@@ -1,7 +1,7 @@
 (() => {
   const canvas = document.getElementById('drawing-canvas');
   const paper = document.getElementById('paper');
-  const ctx = canvas.getContext('2d', { willReadFrequently: false });
+  const ctx = canvas.getContext('2d');
   const emptyMessage = document.getElementById('canvas-empty');
   const undoButton = document.getElementById('undo-button');
   const eraserButton = document.getElementById('eraser-button');
@@ -10,10 +10,11 @@
   const ideaOverlay = document.getElementById('idea-overlay');
   const ideaCaption = document.getElementById('idea-caption');
   const toast = document.getElementById('toast');
-  const dialog = document.getElementById('story-dialog');
-  const storyChoices = document.getElementById('story-choices');
-  const storyResult = document.getElementById('story-result');
-  const storyText = document.getElementById('story-text');
+  const storyInvitation = document.getElementById('story-invitation');
+  const storyScene = document.getElementById('story-scene');
+  const childStoryArt = document.getElementById('child-story-art');
+  const sceneCaption = document.getElementById('scene-caption');
+  const sceneProgress = document.getElementById('scene-progress-fill');
 
   let color = '#f47758';
   let erasing = false;
@@ -22,7 +23,11 @@
   let undoStack = [];
   let ideaIndex = -1;
   let toastTimer = 0;
-  let currentStory = '';
+  let idleTimer = 0;
+  let sceneTimers = [];
+  let currentArtwork = null;
+  let promptedSignature = '';
+  let storyActive = false;
 
   const ideas = [
     {
@@ -37,28 +42,6 @@
       caption: 'Let’s make a starry sky. Add a twinkle or two!',
       art: '<svg viewBox="0 0 180 150" fill="none"><path d="m52 41 6 13 14 1-11 9 4 14-13-8-12 8 4-14-11-9 14-1 5-13Z" stroke="#D4A64F" stroke-width="4" stroke-linejoin="round" stroke-dasharray="2 7"/><path d="m119 25 4 9 10 1-8 6 3 10-9-6-9 6 3-10-8-6 10-1 4-9Z" stroke="#8C9ED0" stroke-width="4" stroke-linejoin="round" stroke-dasharray="2 7"/><path d="m121 83 4 8 9 1-7 6 2 9-8-5-8 5 3-9-8-6 9-1 4-8Z" stroke="#D38FA9" stroke-width="4" stroke-linejoin="round" stroke-dasharray="2 7"/><circle cx="70" cy="105" r="3" fill="#E9C45D"/><circle cx="40" cy="96" r="2.5" fill="#9DB59B"/><circle cx="146" cy="63" r="3" fill="#E6A47C"/></svg>'
     }
-  ];
-
-  const stories = {
-    sleepy: [
-      'One cozy night, your doodle found a tiny moonbeam. The moonbeam tucked it in with a soft, silver yawn. Together they wished goodnight to every star, then dreamed of a brand-new day.',
-      'When the sky turned lavender, your doodle curled up on a cloud. A friendly little star sang a lullaby, and the whole sky glowed gently until morning.'
-    ],
-    friend: [
-      'One bright morning, your doodle met a tiny new friend. They shared a giggle, a snack, and the very best secret: kindness makes every garden grow.',
-      'Your doodle heard a little “hello!” from behind a flower. A new friend popped out, and soon they were laughing, dancing, and sharing their favorite colors.'
-    ],
-    adventure: [
-      'Your doodle packed a little bag and set off beyond the cloud hills. A friendly star showed the way, and every new place brought a kind surprise. Home was waiting with a big, warm welcome.',
-      'With one brave step, your doodle sailed across a sea of soft blue. It found a quiet island full of singing shells, then sailed back to share the song with everyone.'
-    ]
-  };
-
-  const tinyWonders = [
-    'The Sun is a star! It looks big because it is much closer to us than the other stars.',
-    'Bees do a little waggle dance to show their friends where the flowers are.',
-    'A rainbow is made when sunlight shines through tiny drops of water in the sky.',
-    'Some flowers turn their faces toward the sunny sky as they grow.'
   ];
 
   function showToast(message) {
@@ -87,6 +70,36 @@
     undoButton.disabled = undoStack.length === 0;
   }
 
+  function renderStroke(target, stroke, width, height) {
+    if (!stroke.points.length) return;
+    const first = stroke.points[0];
+    target.save();
+    target.lineCap = 'round';
+    target.lineJoin = 'round';
+    target.lineWidth = stroke.size;
+    target.globalCompositeOperation = stroke.erase ? 'destination-out' : 'source-over';
+    target.strokeStyle = stroke.color;
+    target.fillStyle = stroke.color;
+    if (stroke.points.length === 1) {
+      target.beginPath();
+      target.arc(first.x * width, first.y * height, stroke.size / 2, 0, Math.PI * 2);
+      target.fill();
+    } else {
+      target.beginPath();
+      target.moveTo(first.x * width, first.y * height);
+      for (let i = 1; i < stroke.points.length; i += 1) {
+        const point = stroke.points[i];
+        target.lineTo(point.x * width, point.y * height);
+      }
+      target.stroke();
+    }
+    target.restore();
+  }
+
+  function drawStroke(stroke, width, height) {
+    renderStroke(ctx, stroke, width, height);
+  }
+
   function fitCanvas() {
     const rect = canvas.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
@@ -94,6 +107,7 @@
     canvas.height = Math.round(rect.height * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     redraw();
+    if (!storyInvitation.hidden && currentArtwork) positionStoryInvitation(currentArtwork);
   }
 
   function redraw() {
@@ -107,32 +121,6 @@
     if (activeStroke && activeStroke.points.length > 0) drawStroke(activeStroke, rect.width, rect.height);
   }
 
-  function drawStroke(stroke, width, height) {
-    if (!stroke.points.length) return;
-    const first = stroke.points[0];
-    ctx.save();
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.lineWidth = stroke.size;
-    ctx.globalCompositeOperation = stroke.erase ? 'destination-out' : 'source-over';
-    ctx.strokeStyle = stroke.color;
-    ctx.fillStyle = stroke.color;
-    if (stroke.points.length === 1) {
-      ctx.beginPath();
-      ctx.arc(first.x * width, first.y * height, stroke.size / 2, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      ctx.beginPath();
-      ctx.moveTo(first.x * width, first.y * height);
-      for (let i = 1; i < stroke.points.length; i += 1) {
-        const point = stroke.points[i];
-        ctx.lineTo(point.x * width, point.y * height);
-      }
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
   function pointFromEvent(event) {
     const rect = canvas.getBoundingClientRect();
     return {
@@ -141,9 +129,16 @@
     };
   }
 
+  function cancelStoryPrompt() {
+    window.clearTimeout(idleTimer);
+    storyInvitation.hidden = true;
+  }
+
   function startStroke(event) {
-    if (event.button !== undefined && event.button !== 0) return;
+    if (storyActive || (event.button !== undefined && event.button !== 0)) return;
     event.preventDefault();
+    cancelStoryPrompt();
+    promptedSignature = '';
     canvas.setPointerCapture?.(event.pointerId);
     remember();
     activeStroke = { color, size: erasing ? 28 : 11, erase: erasing, points: [pointFromEvent(event)] };
@@ -163,13 +158,11 @@
     activeStroke = null;
     redraw();
     updateUndoButton();
+    scheduleStoryPrompt();
   }
 
   function speak(text) {
-    if (!('speechSynthesis' in window)) {
-      showToast('This device cannot read aloud, but you can still make up the words!');
-      return;
-    }
+    if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = 0.84;
@@ -185,6 +178,7 @@
   }
 
   function showIdea() {
+    if (storyActive) return;
     ideaIndex = (ideaIndex + 1) % ideas.length;
     const idea = ideas[ideaIndex];
     ideaOverlay.innerHTML = idea.art;
@@ -200,8 +194,8 @@
       return;
     }
     const rect = canvas.getBoundingClientRect();
-    const exportCanvas = document.createElement('canvas');
     const scale = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const exportCanvas = document.createElement('canvas');
     exportCanvas.width = Math.round(rect.width * scale);
     exportCanvas.height = Math.round(rect.height * scale);
     const exportContext = exportCanvas.getContext('2d');
@@ -209,29 +203,8 @@
     exportContext.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
     exportContext.scale(scale, scale);
     for (const stroke of strokes) {
-      // Render to the export surface with CSS pixel coordinates.
-      const points = stroke.points;
-      const width = rect.width;
-      const height = rect.height;
-      exportContext.save();
-      exportContext.lineCap = 'round';
-      exportContext.lineJoin = 'round';
-      exportContext.lineWidth = stroke.size;
-      // The paper is opaque, so an eraser restores the paper color in the PNG.
-      exportContext.globalCompositeOperation = 'source-over';
-      exportContext.strokeStyle = stroke.erase ? '#fffefa' : stroke.color;
-      exportContext.fillStyle = stroke.erase ? '#fffefa' : stroke.color;
-      if (points.length === 1) {
-        exportContext.beginPath();
-        exportContext.arc(points[0].x * width, points[0].y * height, stroke.size / 2, 0, Math.PI * 2);
-        exportContext.fill();
-      } else {
-        exportContext.beginPath();
-        exportContext.moveTo(points[0].x * width, points[0].y * height);
-        for (let i = 1; i < points.length; i += 1) exportContext.lineTo(points[i].x * width, points[i].y * height);
-        exportContext.stroke();
-      }
-      exportContext.restore();
+      const copy = { ...stroke, erase: false, color: stroke.erase ? '#fffefa' : stroke.color };
+      renderStroke(exportContext, copy, rect.width, rect.height);
     }
     exportCanvas.toBlob((blob) => {
       if (!blob) {
@@ -250,36 +223,137 @@
     }, 'image/png');
   }
 
-  function openStory() {
-    currentStory = '';
-    storyChoices.hidden = false;
-    storyResult.hidden = true;
-    document.getElementById('story-dialog-title').textContent = 'What do you see in your doodle?';
-    document.querySelector('.dialog-subtitle').textContent = strokes.length
-      ? 'Pick a story feeling or a tiny wonder. Your drawing can be anything you say!'
-      : 'Start with a mark, or dream up what this page could become!';
-    dialog.showModal();
+  function findArtwork() {
+    if (strokes.length === 0 || canvas.width === 0 || canvas.height === 0) return null;
+    const rect = canvas.getBoundingClientRect();
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    const width = canvas.width;
+    const height = canvas.height;
+    let minX = width;
+    let minY = height;
+    let maxX = -1;
+    let maxY = -1;
+    for (let y = 0; y < height; y += 2) {
+      for (let x = 0; x < width; x += 2) {
+        if (pixels[(y * width + x) * 4 + 3] > 24) {
+          minX = Math.min(minX, x);
+          minY = Math.min(minY, y);
+          maxX = Math.max(maxX, x);
+          maxY = Math.max(maxY, y);
+        }
+      }
+    }
+    if (maxX < 0) return null;
+    const scaleX = width / rect.width;
+    const scaleY = height / rect.height;
+    const bounds = {
+      left: Math.max(0, minX / scaleX - 12),
+      top: Math.max(0, minY / scaleY - 12),
+      right: Math.min(rect.width, (maxX + 1) / scaleX + 12),
+      bottom: Math.min(rect.height, (maxY + 1) / scaleY + 12)
+    };
+    const pointCount = strokes.reduce((total, stroke) => total + stroke.points.length, 0);
+    const signature = [strokes.length, pointCount, Math.round(bounds.left / 8), Math.round(bounds.top / 8), Math.round(bounds.right / 8), Math.round(bounds.bottom / 8)].join(':');
+    return { bounds, signature };
   }
 
-  function makeStory(kind) {
-    const options = stories[kind];
-    currentStory = options[Math.floor(Math.random() * options.length)];
-    document.getElementById('story-dialog-title').textContent = 'A little story for your doodle';
-    document.querySelector('.dialog-subtitle').textContent = 'You chose the feeling. Your imagination made the magic.';
-    storyText.textContent = currentStory;
-    storyChoices.hidden = true;
-    storyResult.hidden = false;
-    speak(currentStory);
+  function positionStoryInvitation(artwork) {
+    storyInvitation.hidden = false;
+    const paperRect = paper.getBoundingClientRect();
+    const canvasRect = canvas.getBoundingClientRect();
+    const width = storyInvitation.offsetWidth;
+    const height = storyInvitation.offsetHeight;
+    const drawLeft = canvasRect.left - paperRect.left + artwork.bounds.left;
+    const drawTop = canvasRect.top - paperRect.top + artwork.bounds.top;
+    const drawRight = canvasRect.left - paperRect.left + artwork.bounds.right;
+    const drawBottom = canvasRect.top - paperRect.top + artwork.bounds.bottom;
+    const gap = 12;
+    let left = drawRight + gap;
+    if (left + width > paper.clientWidth - 10) left = drawLeft - width - gap;
+    left = Math.max(10, Math.min(left, paper.clientWidth - width - 10));
+    let top = (drawTop + drawBottom) / 2 - height / 2;
+    top = Math.max(10, Math.min(top, paper.clientHeight - height - 10));
+    storyInvitation.style.left = left + 'px';
+    storyInvitation.style.top = top + 'px';
   }
 
-  function makeFact() {
-    currentStory = tinyWonders[Math.floor(Math.random() * tinyWonders.length)];
-    document.getElementById('story-dialog-title').textContent = 'A tiny wonder for you';
-    document.querySelector('.dialog-subtitle').textContent = 'Little things in our world can be full of magic.';
-    storyText.textContent = currentStory;
-    storyChoices.hidden = true;
-    storyResult.hidden = false;
-    speak(currentStory);
+  function scheduleStoryPrompt() {
+    window.clearTimeout(idleTimer);
+    if (storyActive || strokes.length === 0) return;
+    idleTimer = window.setTimeout(() => {
+      const artwork = findArtwork();
+      if (!artwork || artwork.signature === promptedSignature) return;
+      currentArtwork = artwork;
+      promptedSignature = artwork.signature;
+      positionStoryInvitation(artwork);
+      speak('A little story is ready. Would you like to hear it or keep drawing?');
+    }, 3000);
+  }
+
+  function cropDrawing(artwork) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const sourceX = Math.max(0, Math.floor(artwork.bounds.left * scaleX));
+    const sourceY = Math.max(0, Math.floor(artwork.bounds.top * scaleY));
+    const sourceWidth = Math.max(1, Math.min(canvas.width - sourceX, Math.ceil((artwork.bounds.right - artwork.bounds.left) * scaleX)));
+    const sourceHeight = Math.max(1, Math.min(canvas.height - sourceY, Math.ceil((artwork.bounds.bottom - artwork.bounds.top) * scaleY)));
+    const outputScale = 2;
+    const cropped = document.createElement('canvas');
+    cropped.width = Math.max(1, Math.round(sourceWidth / scaleX * outputScale));
+    cropped.height = Math.max(1, Math.round(sourceHeight / scaleY * outputScale));
+    const cropContext = cropped.getContext('2d');
+    cropContext.drawImage(canvas, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, cropped.width, cropped.height);
+    return cropped.toDataURL('image/png');
+  }
+
+  function clearSceneTimers() {
+    sceneTimers.forEach((timer) => window.clearTimeout(timer));
+    sceneTimers = [];
+  }
+
+  function finishStory() {
+    if (!storyActive) return;
+    storyActive = false;
+    clearSceneTimers();
+    storyScene.hidden = true;
+    storyScene.classList.remove('is-tidying', 'is-finished');
+    childStoryArt.removeAttribute('src');
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    currentArtwork = null;
+    showToast('Back to your drawing!');
+  }
+
+  function playStory() {
+    if (!currentArtwork || storyActive) return;
+    window.clearTimeout(idleTimer);
+    storyInvitation.hidden = true;
+    hideIdea();
+    storyActive = true;
+    promptedSignature = currentArtwork.signature;
+    childStoryArt.src = cropDrawing(currentArtwork);
+    storyScene.classList.remove('is-tidying', 'is-finished');
+    sceneCaption.textContent = 'A kind little helper sees toys waiting to be put away.';
+    sceneProgress.style.animation = 'none';
+    void sceneProgress.offsetWidth;
+    sceneProgress.style.animation = '';
+    storyScene.hidden = false;
+    speak('A little friend sees toys waiting to be put away. Together, they put them in a basket and give the floor a gentle sweep. All tidy. Now there is room to play!');
+
+    sceneTimers.push(window.setTimeout(() => {
+      storyScene.classList.add('is-tidying');
+      sceneCaption.textContent = 'Together, the toys go in their basket and the floor gets a gentle sweep.';
+    }, 2600));
+    sceneTimers.push(window.setTimeout(() => {
+      storyScene.classList.add('is-finished');
+      sceneCaption.textContent = 'All tidy! Now everyone has room to play.';
+    }, 6500));
+    sceneTimers.push(window.setTimeout(finishStory, 10000));
+  }
+
+  function hideStoryInvitation() {
+    if (!storyInvitation.hidden && currentArtwork) promptedSignature = currentArtwork.signature;
+    storyInvitation.hidden = true;
   }
 
   canvas.addEventListener('pointerdown', startStroke);
@@ -309,10 +383,13 @@
 
   undoButton.addEventListener('click', () => {
     if (!undoStack.length) return;
+    cancelStoryPrompt();
     strokes = undoStack.pop();
+    currentArtwork = null;
     redraw();
     updateUndoButton();
     showToast('One step back.');
+    scheduleStoryPrompt();
   });
 
   clearButton.addEventListener('click', () => {
@@ -320,8 +397,11 @@
       showToast('Your paper is already fresh and ready!');
       return;
     }
+    cancelStoryPrompt();
     remember();
     strokes = [];
+    currentArtwork = null;
+    promptedSignature = '';
     hideIdea();
     redraw();
     showToast('Fresh page! Tap undo if you want it back.');
@@ -329,29 +409,11 @@
 
   saveButton.addEventListener('click', saveDrawing);
   document.getElementById('idea-button').addEventListener('click', showIdea);
-  document.getElementById('story-button').addEventListener('click', openStory);
-  document.getElementById('read-prompt').addEventListener('click', () => speak('Hello, little artist. What will your doodle become? Every wiggly line has a little bit of wonder in it. Touch the paper and make a mark.'));
-  document.getElementById('dialog-close').addEventListener('click', () => dialog.close());
-  document.getElementById('again-story').addEventListener('click', () => {
-    storyChoices.hidden = false;
-    storyResult.hidden = true;
-    document.getElementById('story-dialog-title').textContent = 'What do you see in your doodle?';
-    document.querySelector('.dialog-subtitle').textContent = 'Pick a little story feeling. Your drawing can be anything you say!';
-  });
-  document.getElementById('listen-story').addEventListener('click', () => speak(currentStory));
-  storyChoices.addEventListener('click', (event) => {
-    const choice = event.target.closest('[data-story]');
-    if (!choice) return;
-    if (choice.dataset.story === 'fact') makeFact();
-    else makeStory(choice.dataset.story);
-  });
-
-  dialog.addEventListener('click', (event) => {
-    if (event.target === dialog) dialog.close();
-  });
-  dialog.addEventListener('close', () => {
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-  });
+  document.getElementById('read-prompt').addEventListener('click', () => speak('Draw anything you like. When you pause, a little story will appear by your drawing. You can hear it or keep drawing.'));
+  document.getElementById('read-story-flow').addEventListener('click', () => speak('After you make a drawing, pause for a moment. A story invitation will appear beside your art. Tap hear a story, or keep drawing.'));
+  document.getElementById('story-button').addEventListener('click', playStory);
+  document.getElementById('continue-drawing').addEventListener('click', hideStoryInvitation);
+  document.getElementById('scene-close').addEventListener('click', finishStory);
 
   if ('ResizeObserver' in window) {
     new ResizeObserver(fitCanvas).observe(paper);
