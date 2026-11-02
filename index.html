@@ -66,7 +66,7 @@
               <div class="idea-overlay" id="idea-overlay" aria-hidden="true"></div>
               <div class="idea-caption" id="idea-caption" aria-live="polite"></div>
               <div class="story-invitation" id="story-invitation" hidden role="group" aria-label="Story invitation" aria-live="polite">
-                <div class="invitation-heading"><span class="invitation-mark" aria-hidden="true">✦</span><div><strong>A story is ready!</strong><small>What happens next?</small></div></div>
+                <div class="invitation-heading"><span class="invitation-mark" aria-hidden="true">✦</span><div><strong id="invitation-title">A story is ready!</strong><small>What happens next?</small></div></div>
                 <button class="invitation-story" id="story-button" type="button"><span>Hear a story</span><span aria-hidden="true">♫</span></button>
                 <button class="invitation-continue" id="continue-drawing" type="button">Keep drawing</button>
                 <span class="invitation-tail" aria-hidden="true"></span>
@@ -80,28 +80,37 @@
                   <div class="scene-cloud cloud-one"></div><div class="scene-cloud cloud-two"></div>
                   <div class="scene-sun">☼</div>
                   <div class="scene-hill hill-back"></div><div class="scene-hill hill-front"></div>
+                  <div class="scene-story-visual" id="scene-story-visual" aria-hidden="true"></div>
                   <div class="story-art-character">
                     <div class="art-aura"></div>
                     <div class="art-paper"><img class="child-story-art" id="child-story-art" alt="The child's original drawing, brought to life" /></div>
-                    <svg class="art-face" viewBox="0 0 100 50" fill="none">
-                      <ellipse cx="35" cy="18" rx="5" ry="7" fill="#425B52"/><ellipse cx="65" cy="18" rx="5" ry="7" fill="#425B52"/>
-                      <path d="M39 32c6 8 16 8 22 0" stroke="#CF735E" stroke-width="4" stroke-linecap="round"/>
-                    </svg>
                     <span class="hero-glint glint-one">✦</span><span class="hero-glint glint-two">✧</span>
                   </div>
-                  <div class="toy toy-one"><span></span></div><div class="toy toy-two"><span></span></div><div class="toy toy-three"></div>
-                  <div class="toy-basket"><span></span><span></span><span></span></div>
                   <svg class="little-helper" viewBox="0 0 100 145" fill="none">
-                    <path d="M30 35c0-15 10-25 23-25s24 10 24 25v7H30v-7Z" fill="#E69A69"/>
-                    <circle cx="53" cy="43" r="21" fill="#F4C999"/><path d="M45 43h1m15 0h1" stroke="#4E6258" stroke-width="4" stroke-linecap="round"/><path d="M48 52c4 4 9 4 13 0" stroke="#B86F5D" stroke-width="3" stroke-linecap="round"/>
-                    <path d="M34 68c8-8 30-8 38 0l8 42H27l7-42Z" fill="#79A6C8"/><path d="m36 76-18 25m49-25 13 17" stroke="#F4C999" stroke-width="9" stroke-linecap="round"/>
-                    <path d="m40 108-5 29m27-29 7 29" stroke="#536E65" stroke-width="10" stroke-linecap="round"/>
-                    <path d="m78 58 7 69" stroke="#9A7B54" stroke-width="4" stroke-linecap="round"/><path d="m79 124 15 1-5 10-15-2 5-9Z" fill="#A6B37C" stroke="#718159" stroke-width="3" stroke-linejoin="round"/>
+                    <circle cx="52" cy="37" r="21" fill="#F4C999"/><path d="M43 37h1m15 0h1" stroke="#4E6258" stroke-width="4" stroke-linecap="round"/><path d="M46 47c4 4 9 4 13 0" stroke="#B86F5D" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M29 30c2-16 12-25 24-25 13 0 23 9 25 25-16-8-32-8-49 0Z" fill="#E69A69"/><path d="M34 67c9-8 28-8 37 0l9 43H26l8-43Z" fill="#79A6C8"/><path d="m36 77-15 22m46-22 15 20" stroke="#F4C999" stroke-width="9" stroke-linecap="round"/>
+                    <path d="m39 108-5 29m23-29 7 29" stroke="#536E65" stroke-width="10" stroke-linecap="round"/><path d="M27 77c-14 4-16 21-3 26l13-7m32-19c14 3 17 18 7 27l-12-8" fill="#D99B72" stroke="#B98462" stroke-width="3"/>
                   </svg>
                   <div class="scene-sparkles"><span>✧</span><span>✦</span><span>✧</span><span>✦</span></div>
                 </div>
-                <div class="scene-caption" id="scene-caption" aria-live="polite">A kind little helper sees toys waiting to be put away.</div>
+                <div class="scene-caption" id="scene-caption" aria-live="polite">A little adventure begins.</div>
                 <div class="scene-progress" aria-hidden="true"><span id="scene-progress-fill"></span></div>
+              </section>
+              <section class="subject-picker" id="subject-picker" hidden role="dialog" aria-modal="true" aria-labelledby="subject-picker-title">
+                <div class="subject-picker-heading">
+                  <div><small>LET'S MAKE IT YOUR STORY</small><strong id="subject-picker-title">What did you draw?</strong></div>
+                  <button class="subject-picker-close" id="subject-picker-close" type="button" aria-label="Go back to drawing">↩</button>
+                </div>
+                <div class="subject-grid">
+                  <button class="subject-choice" data-subject="mountain" type="button"><span>⛰️</span><small>Mountain</small></button>
+                  <button class="subject-choice" data-subject="home" type="button"><span>🏠</span><small>Home</small></button>
+                  <button class="subject-choice" data-subject="flower" type="button"><span>🌼</span><small>Flower or plant</small></button>
+                  <button class="subject-choice" data-subject="animal" type="button"><span>🐾</span><small>Animal</small></button>
+                  <button class="subject-choice" data-subject="vehicle" type="button"><span>🚲</span><small>Vehicle</small></button>
+                  <button class="subject-choice" data-subject="friend" type="button"><span>🙂</span><small>Person</small></button>
+                  <button class="subject-choice" data-subject="sky" type="button"><span>🌈</span><small>Sky or rainbow</small></button>
+                  <button class="subject-choice" data-subject="adventure" type="button"><span>✨</span><small>Something else</small></button>
+                </div>
               </section>
             </div>
 
